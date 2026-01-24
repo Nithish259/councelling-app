@@ -20,11 +20,13 @@ const Appoinment = () => {
 
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
+  /* ================= Fetch Counsellor Info ================= */
   useEffect(() => {
     const info = councellors.find((c) => c._id === councellorId);
     setCouncInfo(info);
   }, [councellors, councellorId]);
 
+  /* ================= Generate Slots ================= */
   useEffect(() => {
     if (!councInfo) return;
 
@@ -47,8 +49,9 @@ const Appoinment = () => {
         }
 
         const dateKey = currentDate.toISOString().split("T")[0];
-        const rawBooked = councInfo.slots_booked?.[dateKey] || [];
 
+        // Convert booked AM/PM → 24hr
+        const rawBooked = councInfo.slots_booked?.[dateKey] || [];
         const bookedTimes = rawBooked.map((time) => {
           const [t, modifier] = time.split(" ");
           let [hours, minutes] = t.split(":");
@@ -84,13 +87,14 @@ const Appoinment = () => {
     generateSlots();
   }, [councInfo]);
 
+  /* ================= Book Appointment ================= */
   const bookAppointment = async () => {
     if (!token) return toast.error("Please login to book appointment");
     if (!slotTime) return toast.error("Please select a time slot");
 
     setLoading(true);
     try {
-      const slotDate = councSlots[slotIndex][0].datetime
+      const slotDate = councSlots[slotIndex]?.[0]?.datetime
         .toISOString()
         .split("T")[0];
 
@@ -132,6 +136,7 @@ const Appoinment = () => {
       new window.Razorpay(options).open();
     } catch (err) {
       toast.error("Payment failed");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -148,6 +153,7 @@ const Appoinment = () => {
           src={councInfo.image}
           alt=""
         />
+
         <div className="flex-1">
           <p className="text-xl md:text-2xl font-semibold flex items-center gap-2">
             {councInfo.name}
@@ -179,42 +185,51 @@ const Appoinment = () => {
 
           {/* Days */}
           <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
-            {councSlots.map((day, index) => (
-              <div
-                key={index}
-                onClick={() => setSlotIndex(index)}
-                className={`p-3 border rounded-lg cursor-pointer text-center min-w-17.5 shrink-0 ${
-                  slotIndex === index
-                    ? "bg-blue-500 text-white"
-                    : "border-gray-300"
-                }`}
-              >
-                <p className="text-xs">
-                  {daysOfWeek[day[0].datetime.getDay()]}
-                </p>
-                <p className="font-semibold">{day[0].datetime.getDate()}</p>
-              </div>
-            ))}
+            {councSlots.map((day, index) => {
+              if (!day || day.length === 0) return null;
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => setSlotIndex(index)}
+                  className={`p-3 border rounded-lg cursor-pointer text-center min-w-[70px]
+                  ${
+                    slotIndex === index
+                      ? "bg-blue-500 text-white"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <p className="text-xs">
+                    {daysOfWeek[day[0].datetime.getDay()]}
+                  </p>
+                  <p className="font-semibold">{day[0].datetime.getDate()}</p>
+                </div>
+              );
+            })}
           </div>
 
           {/* Time Slots */}
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {councSlots[slotIndex]?.map((item, index) => (
-              <p
-                key={index}
-                onClick={() => !item.isBooked && setSlotTime(item.time)}
-                className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap shrink-0
-                ${
-                  item.isBooked
-                    ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
-                    : item.time === slotTime
-                      ? "bg-blue-500 text-white border-blue-500 cursor-pointer"
-                      : "border-gray-300 cursor-pointer"
-                }`}
-              >
-                {item.time}
-              </p>
-            ))}
+            {councSlots[slotIndex]?.length > 0 ? (
+              councSlots[slotIndex].map((item, index) => (
+                <p
+                  key={index}
+                  onClick={() => !item.isBooked && setSlotTime(item.time)}
+                  className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap flex-shrink-0
+                  ${
+                    item.isBooked
+                      ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
+                      : item.time === slotTime
+                        ? "bg-blue-500 text-white border-blue-500 cursor-pointer"
+                        : "border-gray-300 cursor-pointer"
+                  }`}
+                >
+                  {item.time}
+                </p>
+              ))
+            ) : (
+              <p className="text-gray-400 text-sm">No slots available</p>
+            )}
           </div>
 
           <button
@@ -233,6 +248,6 @@ const Appoinment = () => {
       />
     </div>
   );
-};
+};;
 
 export default Appoinment;

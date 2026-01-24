@@ -5,7 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 
-dotenv.config({ path: "./.env" });
+dotenv.config();
 
 const connectDB = require("./config/mongodb");
 const connectCloudinary = require("./config/cloudinary");
@@ -25,8 +25,17 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
-// Middleware
-app.use(cors());
+// ✅ CORS (ONLY ONCE, AT TOP)
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://your-netlify-site.netlify.app"
+    ],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Routes
@@ -45,15 +54,19 @@ app.get("/", (req, res) => {
 // Create HTTP server
 const server = http.createServer(app);
 
-// Socket.IO setup
+// ✅ Socket.IO with proper CORS
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: [
+      "http://localhost:5173",
+      "https://councelling-app.onrender.com"
+    ],
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
-/* 🔐 GLOBAL SOCKET AUTH MIDDLEWARE */
+/* 🔐 GLOBAL SOCKET AUTH */
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
