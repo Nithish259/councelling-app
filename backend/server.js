@@ -5,7 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 
-dotenv.config();
+dotenv.config({ path: "./.env" });
 
 const connectDB = require("./config/mongodb");
 const connectCloudinary = require("./config/cloudinary");
@@ -25,14 +25,8 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
-// ✅ CORS (ONLY ONCE, AT TOP)
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "https://councelling-app.onrender.com"],
-    credentials: true,
-  }),
-);
-
+// Middleware
+app.use(cors());
 app.use(express.json());
 
 // Routes
@@ -51,19 +45,15 @@ app.get("/", (req, res) => {
 // Create HTTP server
 const server = http.createServer(app);
 
-// ✅ Socket.IO with proper CORS
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://councelling-app.onrender.com"
-    ],
+    origin: "https://councelling-app.onrender.com",
     methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
-/* 🔐 GLOBAL SOCKET AUTH */
+/* 🔐 GLOBAL SOCKET AUTH MIDDLEWARE */
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -82,6 +72,13 @@ io.use((socket, next) => {
 // Socket modules
 require("./socket/signaling")(io);
 require("./socket/chatSocket")(io);
+
+app.use(
+  cors({
+    origin: ["https://councelling-app.onrender.com"],
+    credentials: true,
+  }),
+);
 
 // Start server
 server.listen(port, () => {
