@@ -28,12 +28,9 @@ connectCloudinary();
 // ✅ CORS (ONLY ONCE, AT TOP)
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://your-netlify-site.netlify.app"
-    ],
+    origin: ["http://localhost:5173", "https://councelling-app.onrender.com"],
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
