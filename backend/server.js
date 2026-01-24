@@ -48,7 +48,7 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "https://councelling-app.onrender.com",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -75,7 +75,7 @@ require("./socket/chatSocket")(io);
 
 app.use(
   cors({
-    origin: ["https://councelling-app.onrender.com"],
+    origin: ["https://councelling121.netlify.app"],
     credentials: true,
   }),
 );
