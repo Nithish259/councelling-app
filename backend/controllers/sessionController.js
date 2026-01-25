@@ -5,6 +5,31 @@ const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 const clientModel = require("../models/clientModel");
 const councellorModel = require("../models/councellorModel");
+const { sessionCompletedEmail } = require("./../emails/template");
+
+const autoCancelIfExpired = async (session) => {
+  if (session.status === "completed" || session.status === "cancelled") return;
+
+  const appointment = await appointmentModel.findById(session.appointmentId);
+
+  if (!appointment) return;
+
+  // Combine date + time
+  const sessionDateTime = new Date(
+    `${appointment.slotDate} ${appointment.slotTime}`,
+  );
+  const now = new Date();
+
+  if (now > sessionDateTime) {
+    session.status = "cancelled";
+    session.endedAt = new Date();
+    await session.save();
+
+    await appointmentModel.findByIdAndUpdate(session.appointmentId, {
+      status: "cancelled",
+    });
+  }
+};
 
 /* ================= CREATE SESSION ================= */
 exports.createSession = async (req, res) => {
@@ -62,6 +87,8 @@ exports.getSessionByAppointment = async (req, res) => {
       });
     }
 
+    await autoCancelIfExpired(session); // 👈 ADD THIS
+
     res.json({ status: "Success", session });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
@@ -78,6 +105,15 @@ exports.joinSession = async (req, res) => {
       return res.status(404).json({
         status: "Failed",
         message: "Session not found",
+      });
+    }
+
+    await autoCancelIfExpired(session); // 👈 ADD THIS
+
+    if (session.status === "cancelled") {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Session expired and has been cancelled",
       });
     }
 
@@ -151,6 +187,10 @@ exports.endSession = async (req, res) => {
     await sendEmail({
       to: client.email,
       subject: "Session completed",
+      html: sessionCompletedEmail({
+        name: client.name,
+        attender: councellor.name,
+      }),
       text: `Hi ${client.name},
 Your session with ${councellor.name} is completed.
 Duration: ${duration} minutes.`,
@@ -159,6 +199,10 @@ Duration: ${duration} minutes.`,
     await sendEmail({
       to: councellor.email,
       subject: "Session completed",
+      html: sessionCompletedEmail({
+        name: councellor.name,
+        attender: client.name,
+      }),
       text: `Hi ${councellor.name},
 Session with ${client.name} completed.
 Duration: ${duration} minutes.`,

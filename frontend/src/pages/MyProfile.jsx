@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { AppContext } from "../context/Context";
-import { assets } from "../assets/assets";
+import { assets, counselorSpecialties } from "../assets/assets"; // ✅ added categories import
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -213,14 +213,34 @@ const MyProfile = () => {
 
           {role === "councellor" && (
             <>
-              <ProfileField
-                label="Speciality"
-                isEdit={isEdit}
-                value={profileData.speciality}
-                onChange={(v) =>
-                  setProfileData((p) => ({ ...p, speciality: v }))
-                }
-              />
+              {/* ✅ UPDATED SPECIALITY DROPDOWN */}
+              <div>
+                <p className="text-gray-500 text-sm mb-1">Speciality</p>
+                {isEdit ? (
+                  <select
+                    className="w-full border rounded p-2 text-sm"
+                    value={profileData.speciality || ""}
+                    onChange={(e) =>
+                      setProfileData((p) => ({
+                        ...p,
+                        speciality: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Select Speciality</option>
+                    {counselorSpecialties.map((item) => (
+                      <option key={item.category} value={item.category}>
+                        {item.category}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="font-medium text-sm sm:text-base">
+                    {profileData.speciality || "-"}
+                  </p>
+                )}
+              </div>
+
               <ProfileField
                 label="Fees (₹)"
                 isEdit={isEdit}
@@ -251,7 +271,6 @@ const MyProfile = () => {
             </>
           )}
 
-          {/* ACTION BUTTON */}
           <div className="flex justify-center md:justify-end pt-4">
             {isEdit ? (
               <button
@@ -279,7 +298,6 @@ const MyProfile = () => {
 const ProfileField = ({ label, value, isEdit, onChange, type = "text" }) => (
   <div>
     <p className="text-gray-500 text-sm mb-1">{label}</p>
-
     {isEdit ? (
       type === "textarea" ? (
         <textarea

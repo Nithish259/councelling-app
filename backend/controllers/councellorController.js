@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { v2: cloudinary } = require("cloudinary");
-
+const streamifier = require("streamifier");
 const councellorModel = require("../models/councellorModel");
 const appointmentModel = require("../models/appoinmentModel");
 
@@ -89,9 +89,22 @@ exports.updateCouncellorProfile = async (req, res) => {
   try {
     const updateData = { ...req.body };
 
+    // ✅ If image uploaded
     if (req.file) {
-      const upload = await cloudinary.uploader.upload(req.file.path);
-      updateData.image = upload.secure_url;
+      const uploadFromBuffer = () =>
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "counsellor_profiles" }, // optional folder
+            (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            },
+          );
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+
+      const uploadResult = await uploadFromBuffer();
+      updateData.image = uploadResult.secure_url;
     }
 
     const updated = await councellorModel.findByIdAndUpdate(
@@ -115,7 +128,8 @@ exports.getCouncellorAppointments = async (req, res) => {
   try {
     const appointments = await appointmentModel
       .find({ councellorId: req.user.id })
-      .populate("clientId", "name email image");
+      .populate("clientId", "name email image")
+      .sort({ createdAt: -1 });
 
     res.json({ status: "Success", appointments });
   } catch (error) {

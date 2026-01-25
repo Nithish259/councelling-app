@@ -9,33 +9,54 @@ const conversationModel = require("../models/conversationModel");
 
 const createOrder = async (req, res) => {
   try {
-    const { councellorId, slotDate, slotTime } = req.body;
+    const { councellorId } = req.body;
 
     const councellor = await councellorModel.findById(councellorId);
-    if (!councellor)
-      return res
-        .status(404)
-        .json({ status: "Failed", message: "Counsellor not found" });
+
+    if (!councellor) {
+      return res.status(404).json({
+        status: "Failed",
+        message: "Counsellor not found",
+      });
+    }
+
+    // 🛑 Prevent crash if fees missing
+    if (!councellor.fees || isNaN(councellor.fees)) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Invalid counsellor fee",
+      });
+    }
 
     const instance = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    const amountInRupee = councellor.fees * 100;
+    // ✅ Convert rupees → paise
+    const amountInPaise = Math.round(councellor.fees * 100);
 
     const options = {
-      amount: amountInRupee,
+      amount: amountInPaise,
       currency: "INR",
       receipt: `rcpt_${Date.now()}`,
     };
 
     const order = await instance.orders.create(options);
-    res.status(200).json({ status: "Success", order });
+
+    res.status(200).json({
+      status: "Success",
+      order,
+    });
   } catch (error) {
-    res.status(500).json({ status: "Failed", message: error.message });
+    console.error("CREATE ORDER ERROR:", error); // 👈 ADD THIS
+    res.status(500).json({
+      status: "Failed",
+      message: error.message,
+    });
   }
 };
+
 
 const verifyPayment = async (req, res) => {
   try {

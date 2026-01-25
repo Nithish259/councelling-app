@@ -20,9 +20,9 @@ exports.paymentEmail = ({ name, amount }) => `
   <p>Your session is now confirmed.</p>
 `;
 
-exports.sessionCompletedEmail = ({ name }) => `
+exports.sessionCompletedEmail = ({ name, attender }) => `
   <h2>✅ Session Completed</h2>
   <p>Hi ${name},</p>
-  <p>Your counseling session has been completed.</p>
+  <p>Your session with ${attender} is completed.</p>
   <p>We hope it helped you.</p>
 `;

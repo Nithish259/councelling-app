@@ -1,7 +1,7 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "../context/Context";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, IndianRupee } from "lucide-react";
+import { Calendar, Clock, IndianRupee, Search } from "lucide-react";
 
 const statusStyles = {
   upcoming: "text-emerald-700 bg-emerald-50",
@@ -26,38 +26,95 @@ const MyAppointments = () => {
   const { appointments, loadAppointments, role } = useContext(AppContext);
   const navigate = useNavigate();
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   useEffect(() => {
     loadAppointments();
   }, []);
+
+  // 🔍 FILTER LOGIC
+  const filteredAppointments = appointments.filter((item) => {
+    const person = role === "client" ? item.councellorId : item.clientId;
+
+    const searchText = `
+      ${person?.name || ""}
+      ${item.status || ""}
+      ${item.slotDate || ""}
+      ${item.slotTime || ""}
+    `.toLowerCase();
+
+    const matchesSearch = searchText.includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || item.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
         {/* HEADER */}
-        <div className="mb-6 md:mb-8 text-center md:text-left">
-          <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">
-            Your Appointments
-          </h2>
-          <p className="text-gray-500 text-sm md:text-base mt-1">
-            Manage your counseling sessions & payments
-          </p>
+        <div className="mb-6 md:mb-8 flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">
+                Your Appointments
+              </h2>
+              <p className="text-gray-500 text-sm md:text-base mt-1">
+                Manage your counseling sessions & payments
+              </p>
+            </div>
+
+            {/* 🔍 SEARCH BAR */}
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search appointments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+              />
+            </div>
+          </div>
+
+          {/* 🧩 STATUS FILTER PILLS */}
+          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+            {["all", "upcoming", "completed", "cancelled"].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize border transition-all duration-200
+                  ${
+                    statusFilter === status
+                      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                      : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+                  }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* EMPTY STATE */}
-        {appointments.length === 0 ? (
+        {filteredAppointments.length === 0 ? (
           <div className="mt-20 md:mt-32 flex flex-col items-center text-center px-4">
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5 text-2xl md:text-3xl">
               📅
             </div>
-            <p className="text-gray-800 font-medium">No appointments yet</p>
+            <p className="text-gray-800 font-medium">
+              No matching appointments
+            </p>
             <p className="text-sm text-gray-500 mt-1">
-              Book a session to begin your journey
+              Try adjusting your search or filters
             </p>
           </div>
         ) : (
           /* LIST */
           <div className="space-y-5 md:space-y-6">
-            {appointments.map((item) => {
+            {filteredAppointments.map((item) => {
               const counselor =
                 role === "client" ? item.councellorId : item.clientId;
 
@@ -67,13 +124,11 @@ const MyAppointments = () => {
                   onClick={() => navigate(`/appointmentDetail/${item._id}`)}
                   className="relative bg-white rounded-2xl md:rounded-3xl border overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  {/* STATUS ACCENT STRIP */}
                   <div
                     className={`absolute top-0 left-0 w-full h-1 bg-linear-to-r ${statusAccent[item.status]}`}
                   />
 
                   <div className="p-5 md:p-6 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                    {/* TOP PROFILE */}
                     <div className="flex items-center gap-4">
                       <img
                         src={counselor?.image}
@@ -98,7 +153,6 @@ const MyAppointments = () => {
                       </div>
                     </div>
 
-                    {/* DATE & TIME */}
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 md:justify-center">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
@@ -111,7 +165,6 @@ const MyAppointments = () => {
                       </div>
                     </div>
 
-                    {/* STATUS + PAYMENT */}
                     <div className="flex flex-col items-start md:items-end gap-2">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusStyles[item.status]}`}

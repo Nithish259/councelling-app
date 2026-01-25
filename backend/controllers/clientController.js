@@ -124,7 +124,8 @@ exports.getClientAppointments = async (req, res) => {
   try {
     const appointments = await appointmentModel
       .find({ clientId: req.user.id })
-      .populate("councellorId", "name speciality image");
+      .populate("councellorId", "name speciality image")
+      .sort({ createdAt: -1 });
 
     res.json({ status: "Success", appointments });
   } catch (error) {

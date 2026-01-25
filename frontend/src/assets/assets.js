@@ -19,12 +19,14 @@ import career_work_stress from "./career_work_stress.png";
 import personal_growth_life_coaching from "./personal_growth_life_coaching.png";
 import youth_studuent_councelling from "./youth_studuent_councelling.png";
 import relationship_marriage from "./relationship_marriage.png";
+import logo_healSpace from "./logo_healSpace.png";
 
 export const assets = {
   appointment_img,
   header_img,
   group_profiles,
   logo,
+  logo_healSpace,
   chats_icon,
   verified_icon,
   info_icon,

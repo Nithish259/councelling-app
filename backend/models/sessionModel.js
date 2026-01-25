@@ -28,7 +28,7 @@ const sessionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["created", "ongoing", "completed"],
+      enum: ["created", "ongoing", "completed", "cancelled"], // 👈 added
       default: "created",
     },
 

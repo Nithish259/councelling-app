@@ -194,9 +194,33 @@ export default function JoinSession() {
     setText("");
   };
 
-  const endSession = () => {
+  const endSession = async () => {
+    try {
+      // 🔥 Call backend to mark session completed
+      await axios.post(
+        `${backendUrl}/api/session/end/${roomId}`,
+        {},
+        { headers: { token } },
+      );
+
+      console.log("Session ended successfully in backend");
+    } catch (error) {
+      console.error(
+        "Error ending session:",
+        error.response?.data || error.message,
+      );
+    }
+
+    // 🎥 Close WebRTC
     peerRef.current?.close();
+
+    // 📡 Leave socket room
     socketRef.current?.emit("leave-room", { roomId });
+
+    // 🔌 Disconnect socket
+    socketRef.current?.disconnect();
+
+    // 🚪 Redirect user
     navigate("/");
   };
 
@@ -272,8 +296,24 @@ export default function JoinSession() {
               onChange={(e) => setNotes(e.target.value)}
               className="w-full h-48 resize-none rounded-xl bg-white/5 border border-white/10 p-4"
             />
-            <input type="file" onChange={handleFileUpload} />
-            {uploading && <p className="text-xs text-gray-400">Uploading...</p>}
+            <div className="space-y-3">
+              <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition text-sm text-gray-300">
+                <i className="fa-regular fa-paperclip" />
+                Attach file
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {uploading && (
+                <p className="text-xs text-blue-400 flex items-center gap-2">
+                  <i className="fa-solid fa-spinner animate-spin" />
+                  Uploading attachment...
+                </p>
+              )}
+            </div>
             {attachments.map((a, i) => (
               <a
                 key={i}

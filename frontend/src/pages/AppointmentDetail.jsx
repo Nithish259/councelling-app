@@ -142,7 +142,7 @@ const AppointmentDetail = () => {
               </span>
 
               <span className="text-xs sm:text-sm text-gray-500">
-                Appointment ID: {appointment.meetingRoomId || "—"}
+                Session: {appointment.councellorId.speciality || "—"}
               </span>
             </div>
 
