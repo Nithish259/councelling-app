@@ -1,7 +1,7 @@
 🌿 HealSpace – Online Counseling Platform
 
 HealSpace is a full-stack web application designed to connect clients with professional counsellors for secure and convenient online therapy sessions.
-The platform enables appointment booking, real-time chat, WebRTC video sessions, session tracking, and secure sharing of session notes.
+The platform enables appointment booking, real-time chat & email integration, WebRTC video sessions, session tracking, and secure sharing of session notes.
 
 🚀 Core Features
 👤 Client Features
@@ -64,6 +64,7 @@ Session-based Chat	Persistent & in-session chat support
 WebRTC enables peer-to-peer video communication directly in the browser without external plugins.
 
 🔄 Application Workflow
+
 1️⃣ Client Onboarding
 
 Client registers and logs in.
@@ -82,11 +83,11 @@ Client selects a date and time slot.
 
 Clicks “Pay & Book” (test payment flow).
 
-Appointment is confirmed and visible in both dashboards.
+Appointment is confirmed and visible my appointments section.
 
 4️⃣ Pre-Session Interaction
 
-Client can open appointment details.
+Client can open appointment details by clicking a appointment.
 
 Chat option is available for communication before the session.
 
@@ -111,64 +112,60 @@ Client can review past session details.
 If a session is unattended, it is automatically cancelled 30 minutes after the scheduled start time.
 
 👥 User Roles & Permissions
+
 Role	Capabilities
+
 Client	Book sessions, attend video calls, chat, manage profile, view history
 Counsellor	Manage availability, conduct video sessions, upload notes, access session records
-Admin (Future Scope)	Platform monitoring and management
+
 🛠 Tech Stack
 Frontend
 
-React.js
-
-React Router
-
-Context API
-
-Axios
+ - React.js
 
 Backend
 
-Node.js
+ - Node.js
 
-Express.js
+ - Express.js
 
-MongoDB with Mongoose
+WebRTC 
+ 
+  – Peer-to-peer video calling
 
-Real-Time Systems
+Socket.IO 
 
-WebRTC – Peer-to-peer video calling
-
-Socket.IO – Real-time chat & signaling
+  – Real-time chat & signaling
 
 Cloud & Storage
 
-Cloudinary – Image & PDF uploads (session notes, profile pictures)
+  - Cloudinary – Image & PDF uploads (session notes, profile pictures)
 
 Authentication & Security
 
-JWT Authentication
+ - JWT Authentication
 
-Role-Based Authorization
+ - Role-Based Authorization
 
-Protected API Routes
+ - Protected API Routes
 
 📦 Key Modules
 
-User Authentication & Authorization
+ - User Authentication & Authorization
 
-Appointment Booking System
+ - Appointment Booking System
 
-Test Payment Integration
+ - Test Payment Integration
 
-WebRTC Video Session Handling
+ - WebRTC Video Session Handling
 
-Real-Time Chat System
+ - Real-Time Chat System
 
-Session Notes & File Uploads
+ - Session Notes & File Uploads
 
-Auto Session Cancellation Logic
+ - Auto Session Cancellation Logic
 
-Profile & Availability Management
+ - Profile & Availability Management
 
 💚 Purpose
 
