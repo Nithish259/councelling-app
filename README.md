@@ -167,6 +167,17 @@ Authentication & Security
 
  - Profile & Availability Management
 
+ <img width="1871" height="818" alt="image" src="https://github.com/user-attachments/assets/7863d2b2-e543-471d-848e-17c8b6ea67c3" />
+ <img width="1877" height="828" alt="image" src="https://github.com/user-attachments/assets/c195fc0c-c79a-487e-b868-ba333bdcef8f" />
+ <img width="1882" height="805" alt="image" src="https://github.com/user-attachments/assets/23610868-f6e9-419d-bf48-cbed9c9c2f0f" />
+ <img width="1116" height="698" alt="image" src="https://github.com/user-attachments/assets/e854d263-913c-4f33-ae91-f1897ff6b05f" />
+
+
+
+
+
+
+
 💚 Purpose
 
 HealSpace aims to make mental health support more accessible, organized, and secure by providing a seamless digital experience for therapy sessions through real-time communication and structured session management.
