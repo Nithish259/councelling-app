@@ -19,12 +19,6 @@ const Contact = () => {
           <p className="text-gray-500">
             Tel : (874) 768-5869 <br /> Email : ndfnksdhf@gmail.com
           </p>
-          <p className="font-semibold text-lg text-gray-500">
-            CAREERS AT PRESCIPTO
-          </p>
-          <p className="text-gray-500">
-            Learn more about our team and job openings
-          </p>
         </div>
       </div>
     </div>

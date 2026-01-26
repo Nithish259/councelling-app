@@ -12,25 +12,35 @@ const About = () => {
         <img className="w-full md:max-w-90" src={assets.about_image} alt="" />
         <div className="flex flex-col justify-center gap-6 md:w-2/4 text-sm text-gray-600">
           <p>
-            Welcome to Prescripto, your trusted partner in managing your
-            healthcare needs conveniently and efficiently. At Prescripto, we
-            understand the challenges individuals face when it comes to
-            scheduling doctor appointments and managing their health records.
+            HealSpace was created with a simple mission — to make mental health
+            support more accessible, comfortable, and human in the digital
+            world. We understand that reaching out for help can feel
+            overwhelming. That’s why HealSpace provides a safe and structured
+            online space where clients can connect with qualified counsellors,
+            book sessions with ease, and communicate openly through secure video
+            and chat tools.
           </p>
           <p>
-            Prescripto is committed to excellence in healthcare technology. We
-            continuously strive to enhance our platform, integrating the latest
-            advancements to improve user experience and deliver superior
-            service. Whether you're booking your first appointment or managing
-            ongoing care, Prescripto is here to support you every step of the
-            way.
+            Our platform blends technology with empathy. From booking
+            appointments and attending live WebRTC video sessions to accessing
+            session history and counsellor notes, HealSpace is designed to make
+            the entire counseling journey smooth, private, and supportive.
+            Whether someone is seeking guidance, emotional support, or
+            professional therapy, HealSpace aims to remove barriers and bring
+            care closer — one session at a time.
           </p>
           <b className="text-gray-800">Our Vision</b>
           <p>
-            Our vision at Prescripto is to create a seamless healthcare
-            experience for every user. We aim to bridge the gap between patients
-            and healthcare providers, making it easier for you to access the
-            care you need, when you need it.
+            Our vision is to create a world where mental health support is as
+            accessible as any other essential service. HealSpace strives to
+            become a trusted digital bridge between individuals and mental
+            health professionals, empowering people to seek help without
+            hesitation, stigma, or logistical barriers. We believe technology
+            can play a powerful role in improving emotional well-being when it
+            is built with care, privacy, and human connection at its core. By
+            continuously improving our platform and expanding access to quality
+            counselling services, we aim to support healthier minds, stronger
+            relationships, and more resilient communities.
           </p>
         </div>
       </div>
@@ -60,7 +70,7 @@ const About = () => {
           <b>Personization:</b>
           <p>
             Tailored recommendations and reminders to help you stay on top of
-            your health.
+            your mind.
           </p>
         </div>
       </div>
