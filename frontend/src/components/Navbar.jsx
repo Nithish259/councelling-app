@@ -20,12 +20,12 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400 px-4 md:px-0">
+      <div className="md:mx-3 flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400 px-2 md:px-0">
         {/* Logo */}
         <img
           onClick={() => navigate("/")}
           className="w-44 cursor-pointer"
-          src={assets.logo}
+          src={assets.healspacelogo}
           alt="logo"
         />
 
@@ -158,7 +158,7 @@ const Navbar = () => {
                 className="bg-blue-600 rounded-full font-light hidden md:block text-white px-8 py-3"
                 onClick={() => navigate("/login")}
               >
-                Create Account
+                Login/Register
               </button>
             )
           ) : null}
@@ -203,7 +203,7 @@ const Navbar = () => {
               }}
               className="bg-blue-600 text-white rounded-full py-2 mt-2"
             >
-              Create Account
+              Login/Register
             </button>
           )}
         </div>

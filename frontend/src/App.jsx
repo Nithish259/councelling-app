@@ -18,7 +18,7 @@ import Chat from "./pages/Chat";
 
 const App = () => {
   return (
-    <div className="mx-4 sm:mx-[10%]">
+    <div>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

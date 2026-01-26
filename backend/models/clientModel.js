@@ -29,11 +29,12 @@ const clientSchema = new mongoose.Schema({
   },
   dob: {
     type: Date,
-    default: "Not Selected",
+    default: null,
   },
+
   phone: {
     type: String,
-    default: "000000000",
+    default: "",
   },
 });
 

@@ -18,7 +18,7 @@ export default function JoinSession() {
   const iceQueue = useRef([]);
   const saveTimer = useRef(null);
   const chatEndRef = useRef(null);
-
+  const [socketId, setSocketId] = useState(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -28,26 +28,29 @@ export default function JoinSession() {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
   const [callTime, setCallTime] = useState(0);
-  const [typingUser, setTypingUser] = useState(null);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [networkQuality, setNetworkQuality] = useState("Good");
 
   useEffect(() => {
     const interval = setInterval(() => setCallTime((t) => t + 1), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const formatTime = () => {
-    const h = String(Math.floor(callTime / 3600)).padStart(2, "0");
-    const m = String(Math.floor((callTime % 3600) / 60)).padStart(2, "0");
-    const s = String(callTime % 60).padStart(2, "0");
-    return `${h}:${m}:${s}`;
-  };
+  // const formatTime = () => {
+  //   const h = String(Math.floor(callTime / 3600)).padStart(2, "0");
+  //   const m = String(Math.floor((callTime % 3600) / 60)).padStart(2, "0");
+  //   const s = String(callTime % 60).padStart(2, "0");
+  //   return `${h}:${m}:${s}`;
+  // };
 
   /* SOCKET */
   useEffect(() => {
     if (!token) return;
+
     socketRef.current = io(backendUrl, { auth: { token } });
+
+    socketRef.current.on("connect", () => {
+      setSocketId(socketRef.current.id); // ✅ store in state
+    });
+
     return () => socketRef.current.disconnect();
   }, [token]);
 
@@ -113,7 +116,9 @@ export default function JoinSession() {
         setMessages((prev) => [...prev, { message, sender, timestamp }]),
       );
 
-      socketRef.current.on("peer-left", endSession);
+      socketRef.current.on("peer-left", () => {
+        alert("The other participant as left.If you want you can wait");
+      });
     };
 
     start();
@@ -229,9 +234,9 @@ export default function JoinSession() {
   }, [messages, activeTab]);
 
   return (
-    <div className="h-screen bg-[#0a0f1f] text-gray-200 flex">
+    <div className="h-screen bg-[#0a0f1f] text-gray-200 flex flex-col md:flex-row">
       {/* VIDEO AREA */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden min-h-[60vh] md:min-h-0">
         <video
           ref={remoteVideoRef}
           autoPlay
@@ -245,11 +250,11 @@ export default function JoinSession() {
             autoPlay
             playsInline
             muted
-            className="w-48 h-32 object-cover"
+            className="w-28 h-20 md:w-48 md:h-32 object-cover"
           />
         </div>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full shadow-lg">
+        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-3 md:gap-4 bg-black/70 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-full shadow-lg">
           <ControlButton
             icon={micOn ? "fa-microphone" : "fa-microphone-slash"}
             onClick={toggleMic}
@@ -270,7 +275,7 @@ export default function JoinSession() {
       </div>
 
       {/* SIDE PANEL */}
-      <div className="w-96 bg-[#0b1228] border-l border-white/5 flex flex-col">
+      <div className="w-full md:w-96 h-[45vh] md:h-auto bg-[#0b1228] border-t md:border-t-0 md:border-l border-white/5 flex flex-col">
         <div className="flex border-b border-white/10">
           {role === "councellor" && (
             <TabButton
@@ -330,16 +335,16 @@ export default function JoinSession() {
 
         {activeTab === "chat" && (
           <>
-            <div className="flex-1 p-5 space-y-3 overflow-y-auto">
+            <div className="flex-1 p-3 md:p-5 space-y-3 overflow-y-auto">
               {messages.map((m, i) => {
-                const isMe = m.sender === socketRef.current?.id;
+                const isMe = m.sender === socketId;
                 return (
                   <div
                     key={i}
                     className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm ${isMe ? "bg-blue-600 text-white" : "bg-white/10 text-gray-200"}`}
+                      className={`max-w-[85%] md:max-w-[75%] px-4 py-2 rounded-2xl text-sm ${isMe ? "bg-blue-600 text-white" : "bg-white/10 text-gray-200"}`}
                     >
                       {m.message}
                     </div>
@@ -354,7 +359,7 @@ export default function JoinSession() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                className="w-full rounded-full bg-white/5 border border-white/10 px-5 py-3"
+                className="w-full rounded-full bg-white/5 border border-white/10 px-4 md:px-5 py-2.5 md:py-3 text-sm"
                 placeholder="Type a message…"
               />
             </div>
@@ -368,7 +373,7 @@ export default function JoinSession() {
 const ControlButton = ({ icon, onClick, active }) => (
   <button
     onClick={onClick}
-    className={`w-12 h-12 flex items-center justify-center rounded-full ${active ? "bg-white/10" : "bg-white/5"}`}
+    className={`w-12 h-12 md:w-12 md:h-12 flex items-center justify-center rounded-full ${active ? "bg-white/10" : "bg-white/5"}`}
   >
     <i className={`fa-solid ${icon}`} />
   </button>
@@ -377,7 +382,7 @@ const ControlButton = ({ icon, onClick, active }) => (
 const TabButton = ({ label, icon, active, onClick, full }) => (
   <button
     onClick={onClick}
-    className={`${full ? "w-full" : "w-1/2"} py-4 flex items-center justify-center gap-2 text-sm ${active ? "text-white border-b-2 border-blue-500" : "text-gray-400"}`}
+    className={`${full ? "w-full" : "w-1/2"} py-3 md:py-4 flex items-center justify-center gap-2 text-sm ${active ? "text-white border-b-2 border-blue-500 bg-white/5" : "text-gray-400"}`}
   >
     <i className={`fa-regular ${icon}`} /> {label}
   </button>
