@@ -106,11 +106,23 @@ exports.updateProfile = async (req, res) => {
       address: address ? JSON.parse(address) : undefined,
     };
 
+    // Handle optional image upload
     if (req.file) {
-      const upload = await cloudinary.uploader.upload(req.file.path);
+      // Convert buffer to base64 for memoryStorage
+      const base64File = `data:${req.file.mimetype};base64,${req.file.buffer.toString(
+        "base64",
+      )}`;
+
+      const upload = await cloudinary.uploader.upload(base64File, {
+        folder: "users/profile",
+        use_filename: true, // keeps original filename base
+        unique_filename: true, // adds timestamp/random suffix
+      });
+
       updateData.image = upload.secure_url;
     }
 
+    // Update user
     await clientModel.findByIdAndUpdate(req.user.id, updateData);
 
     res.json({ status: "Success", message: "Profile updated" });

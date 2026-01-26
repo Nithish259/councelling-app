@@ -192,7 +192,7 @@ const Appoinment = () => {
                 <div
                   key={index}
                   onClick={() => setSlotIndex(index)}
-                  className={`p-3 border rounded-lg cursor-pointer text-center min-w-[70px]
+                  className={`p-3 border rounded-lg cursor-pointer text-center min-w-17.5
                   ${
                     slotIndex === index
                       ? "bg-blue-500 text-white"
@@ -215,7 +215,7 @@ const Appoinment = () => {
                 <p
                   key={index}
                   onClick={() => !item.isBooked && setSlotTime(item.time)}
-                  className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap flex-shrink-0
+                  className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap shrink-0
                   ${
                     item.isBooked
                       ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"

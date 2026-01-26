@@ -160,18 +160,25 @@ export default function JoinSession() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const formData = new FormData();
     formData.append("file", file);
-    setUploading(true);
-    const res = await axios.post(
-      `${backendUrl}/api/session-notes/${roomId}/attachment`,
-      formData,
-      {
-        headers: { token, "Content-Type": "multipart/form-data" },
-      },
-    );
-    setAttachments((p) => [...p, res.data.attachment]);
-    setUploading(false);
+
+    try {
+      setUploading(true);
+
+      const res = await axios.post(
+        `${backendUrl}/api/session-notes/${roomId}/attachment`,
+        formData,
+        { headers: { token } }, // ❌ removed Content-Type
+      );
+
+      setAttachments((p) => [...p, res.data.attachment]);
+    } catch (err) {
+      alert(err.response?.data?.message || "Upload failed");
+    } finally {
+      setUploading(false); // ✅ always runs
+    }
   };
 
   const toggleMic = () => {
@@ -303,7 +310,7 @@ export default function JoinSession() {
             />
             <div className="space-y-3">
               <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition text-sm text-gray-300">
-                <i className="fa-regular fa-paperclip" />
+                <i className="fa-regular fa-file"></i>
                 Attach file
                 <input
                   type="file"

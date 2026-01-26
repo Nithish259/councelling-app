@@ -4,8 +4,6 @@ import group_profiles from "./group_profiles.png";
 import contact_image from "./contact_image.png";
 import about_image from "./about_image.png";
 import verified_icon from "./verified_icon.svg";
-import stripe_logo from "./stripe_logo.png";
-import razorpay_logo from "./razorpay_logo.png";
 import mental_health_therapy from "./mental_health_therapy.png";
 import addiction_behavioral_councelling from "./addiction_behavioral_councelling.png";
 import career_work_stress from "./career_work_stress.png";
@@ -22,8 +20,6 @@ export const assets = {
   verified_icon,
   contact_image,
   about_image,
-  stripe_logo,
-  razorpay_logo,
 };
 
 export const counselorSpecialties = [

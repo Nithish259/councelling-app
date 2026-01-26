@@ -49,7 +49,6 @@ const createOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error("CREATE ORDER ERROR:", error); // 👈 ADD THIS
     res.status(500).json({
       status: "Failed",
       message: error.message,

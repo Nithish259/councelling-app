@@ -136,8 +136,12 @@ const AppointmentDetail = () => {
 
             {/* STATUS */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium capitalize w-fit">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span
+                className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${appointment.status === "upcoming" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"} text-sm font-medium capitalize w-fit`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${appointment.status === "upcoming" ? "bg-emerald-500" : "bg-gray-500"} animate-pulse`}
+                />
                 {appointment.status}
               </span>
 

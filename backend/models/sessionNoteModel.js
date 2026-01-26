@@ -5,6 +5,7 @@ const attachmentSchema = new mongoose.Schema({
   url: String,
   originalName: String,
   resourceType: String,
+  format: String,
 });
 
 const sessionNoteSchema = new mongoose.Schema(

@@ -2,6 +2,7 @@ const SessionNote = require("../models/sessionNoteModel");
 const sessionModel = require("../models/sessionModel");
 const { v2: cloudinary } = require("cloudinary");
 const streamifier = require("streamifier");
+const path = require("path");
 
 exports.uploadAttachment = async (req, res) => {
   try {
@@ -22,71 +23,54 @@ exports.uploadAttachment = async (req, res) => {
     const isPdf = req.file.mimetype === "application/pdf";
     const isImage = req.file.mimetype.startsWith("image/");
 
-    // Allow only images or PDFs
     if (!isPdf && !isImage) {
       return res
         .status(400)
         .json({ message: "Only images and PDFs are allowed" });
     }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
+    // Generate a unique filename but keep extension
+    const ext = path.extname(req.file.originalname); // e.g. ".pdf" or ".png"
+    const baseName = path.basename(req.file.originalname, ext);
+    const uniqueName = `${baseName}_${Date.now()}${ext}`;
+
+    // Convert buffer to base64 for upload
+    const base64File = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+    const result = await cloudinary.uploader.upload(base64File, {
+      folder: "counselling/session-notes",
+      resource_type: isPdf ? "raw" : "image",
+      use_filename: true,
+      unique_filename: false, // Important: prevents stripping extension
+      public_id: `counselling/session-notes/${uniqueName}`, // ensures uniqueness
+    });
+
+    // Save to DB
+    const note = await SessionNote.findOneAndUpdate(
+      { sessionId: session._id },
       {
-        folder: "counselling/session-notes",
-        resource_type: isPdf ? "raw" : "image", // ✅ Correct handling
-        use_filename: true,
-        unique_filename: true,
+        $push: {
+          attachments: {
+            publicId: result.public_id,
+            url: result.secure_url,
+            originalName: req.file.originalname,
+            resourceType: result.resource_type,
+            format: result.format,
+          },
+        },
       },
-      async (error, result) => {
-        if (error) {
-          console.error("Cloudinary Upload Error:", error);
-          return res.status(500).json({ message: "Upload failed" });
-        }
-
-        try {
-          // Generate a proper delivery URL
-          let fileUrl;
-
-          if (isPdf) {
-            fileUrl = cloudinary.url(result.public_id + ".pdf", {
-              resource_type: "raw",
-              secure: true,
-            });
-          } else {
-            fileUrl = result.secure_url;
-          }
-
-          const note = await SessionNote.findOneAndUpdate(
-            { sessionId: session._id },
-            {
-              $push: {
-                attachments: {
-                  publicId: result.public_id,
-                  url: fileUrl,
-                  originalName: req.file.originalname,
-                  resourceType: result.resource_type,
-                },
-              },
-            },
-            { upsert: true, new: true },
-          );
-
-          res.status(200).json({
-            success: true,
-            attachment: note.attachments.at(-1),
-          });
-        } catch (dbErr) {
-          console.error("Database Error:", dbErr);
-          res.status(500).json({ message: "Database update failed" });
-        }
-      },
+      { upsert: true, new: true },
     );
 
-    streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+    res.status(200).json({
+      success: true,
+      attachment: note.attachments.at(-1),
+    });
   } catch (err) {
-    console.error("Server Error:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 /* ================= GET SESSION NOTES ================= */

@@ -93,7 +93,7 @@ const Chat = () => {
     role === "client" ? appointment.councellorId : appointment.clientId;
 
   return (
-    <div className="flex flex-col h-screen sm:h-[75vh] bg-white sm:rounded-xl shadow sm:border border-gray-200">
+    <div className="flex flex-col h-screen mx-2 md:mx-24 sm:h-[80vh] bg-white sm:rounded-xl shadow sm:border border-gray-200">
       {/* HEADER */}
       <div className="flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-200">
         <img

@@ -11,16 +11,20 @@ const autoCancelIfExpired = async (session) => {
   if (session.status === "completed" || session.status === "cancelled") return;
 
   const appointment = await appointmentModel.findById(session.appointmentId);
-
   if (!appointment) return;
 
   // Combine date + time
   const sessionDateTime = new Date(
     `${appointment.slotDate} ${appointment.slotTime}`,
   );
+
+  // Add 30 minutes buffer
+  const cancelTime = new Date(sessionDateTime.getTime() + 30 * 60 * 1000); // 30 minutes in ms
+
   const now = new Date();
 
-  if (now > sessionDateTime) {
+  // Cancel only if current time is after sessionDateTime + 30 minutes
+  if (now > cancelTime) {
     session.status = "cancelled";
     session.endedAt = new Date();
     await session.save();
@@ -87,7 +91,7 @@ exports.getSessionByAppointment = async (req, res) => {
       });
     }
 
-    await autoCancelIfExpired(session); // 👈 ADD THIS
+    await autoCancelIfExpired(session);
 
     res.json({ status: "Success", session });
   } catch (error) {

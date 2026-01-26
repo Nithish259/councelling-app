@@ -3,6 +3,7 @@ import { AppContext } from "../context/Context";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { counselorSpecialties } from "../assets/assets";
 
 const Login = () => {
   const { backendUrl, token, setToken } = useContext(AppContext);
@@ -117,14 +118,19 @@ const Login = () => {
         {/* COUNSELLOR EXTRA FIELDS */}
         {role === "councellor" && state === "Sign Up" && (
           <>
-            <input
-              type="text"
-              placeholder="Speciality"
-              className="border p-2 rounded"
+            <select
+              className="w-full border rounded p-2 text-sm"
               value={speciality}
               onChange={(e) => setSpeciality(e.target.value)}
               required
-            />
+            >
+              <option value="">Select Speciality</option>
+              {counselorSpecialties.map((item) => (
+                <option key={item.category} value={item.category}>
+                  {item.category}
+                </option>
+              ))}
+            </select>
 
             <input
               type="number"

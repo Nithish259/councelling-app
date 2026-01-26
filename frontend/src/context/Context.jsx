@@ -118,7 +118,6 @@ const AppContextProvider = ({ children }) => {
           if (!clientData) await loadCouncellorProfileData();
         }
       } catch (error) {
-        console.log("Failed to decode token", error);
         setClientData(null);
         setCouncellorData(null);
         setRole(null);
