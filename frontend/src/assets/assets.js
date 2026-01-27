@@ -1,15 +1,15 @@
 import appointment_img from "./appointment_img.png";
-import header_img from "./header_img.png";
+import header_img from "./optimized_header_img.webp";
 import group_profiles from "./group_profiles.png";
-import contact_image from "./contact_image.png";
-import about_image from "./about_image.png";
+import contact_image from "./optimized_contact_image.webp";
+import about_image from "./optimized_about_image.webp";
 import verified_icon from "./verified_icon.svg";
 import mental_health_therapy from "./mental_health_therapy.png";
-import addiction_behavioral_councelling from "./addiction_behavioral_councelling.png";
-import career_work_stress from "./career_work_stress.png";
-import personal_growth_life_coaching from "./personal_growth_life_coaching.png";
-import youth_studuent_councelling from "./youth_studuent_councelling.png";
-import relationship_marriage from "./relationship_marriage.png";
+import addiction_behavioral_councelling from "./optimized_addiction_behavioral_councelling.webp";
+import career_work_stress from "./optimized_career_work_stress.webp";
+import personal_growth_life_coaching from "./optimized_personal_growth_life_coaching.webp";
+import youth_studuent_councelling from "./optimized_youth_studuent_councelling.webp";
+import relationship_marriage from "./optimized_relationship_marriage.webp";
 import healspacelogo from "./healspace-logo.jpg";
 
 export const assets = {
