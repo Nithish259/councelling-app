@@ -2,32 +2,13 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../context/Context";
 import { counselorSpecialties } from "../assets/assets";
-import axios from "axios";
 
 const Councellors = () => {
-  const [councellors, setCouncellors] = useState([]);
   const [filterCouncellor, setFilterCouncellor] = useState([]);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
-
-  const { backendUrl } = useContext(AppContext);
+  const { councellors } = useContext(AppContext);
   const { speciality } = useParams();
   const navigate = useNavigate();
-
-  /* ================= FETCH COUNSELLORS ================= */
-  useEffect(() => {
-    const fetchCouncellors = async () => {
-      try {
-        const { data } = await axios.get(
-          `${backendUrl}/api/client/getCouncellors`,
-        );
-        setCouncellors(data.councellors);
-        setFilterCouncellor(data.councellors);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchCouncellors();
-  }, []);
 
   /* ================= FILTER BY SPECIALITY ================= */
   useEffect(() => {
