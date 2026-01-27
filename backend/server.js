@@ -38,8 +38,8 @@ app.use("/api/session-notes", sessionNoteRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/chat", chatRoutes);
 
-app.get("/", (req, res) => {
-  res.send("API WORKING");
+app.get("/health", (req, res) => {
+  res.status(200).send("Server is awake 🚀");
 });
 
 // Create HTTP server
