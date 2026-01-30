@@ -88,166 +88,178 @@ const Appoinment = () => {
   }, [councInfo]);
 
   /* ================= Book Appointment ================= */
-  const bookAppointment = async () => {
-    if (!token) return toast.error("Please login to book appointment");
-    if (!slotTime) return toast.error("Please select a time slot");
+    const bookAppointment = async () => {
+      if (!token) {
+        toast.error("Please login to book an appointment");
+        return;
+      }
 
-    setLoading(true);
-    try {
-      const slotDate = councSlots[slotIndex]?.[0]?.datetime
-        .toISOString()
-        .split("T")[0];
+      if (role !== "client") {
+        toast.error("Only clients can book appointments");
+        return;
+      }
 
-      const { data } = await axios.post(
-        `${backendUrl}/api/payment/create-order`,
-        { councellorId, slotDate, slotTime },
-        { headers: { token } },
-      );
+      if (!slotTime) {
+        toast.error("Please select a time slot");
+        return;
+      }
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.order.amount,
-        currency: data.order.currency,
-        name: "Counseling Session",
-        description: `Session on ${slotDate} at ${slotTime}`,
-        order_id: data.order.id,
-        handler: async function (response) {
-          const verifyRes = await axios.post(
-            `${backendUrl}/api/payment/verify`,
-            {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              councellorId,
-              slotDate,
-              slotTime,
-            },
-            { headers: { token } },
-          );
+      setLoading(true);
+      try {
+        const slotDate = councSlots[slotIndex]?.[0]?.datetime
+          .toISOString()
+          .split("T")[0];
 
-          if (verifyRes.data.status === "Success") {
-            toast.success("Appointment booked!");
-            setPaymentDone(true);
-          }
-        },
-        theme: { color: "#14b8a6" },
-      };
+        const { data } = await axios.post(
+          `${backendUrl}/api/payment/create-order`,
+          { councellorId, slotDate, slotTime },
+          { headers: { token } },
+        );
 
-      new window.Razorpay(options).open();
-    } catch (err) {
-      toast.error("Payment failed");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: data.order.amount,
+          currency: data.order.currency,
+          name: "Counseling Session",
+          description: `Session on ${slotDate} at ${slotTime}`,
+          order_id: data.order.id,
+          handler: async function (response) {
+            const verifyRes = await axios.post(
+              `${backendUrl}/api/payment/verify`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                councellorId,
+                slotDate,
+                slotTime,
+              },
+              { headers: { token } },
+            );
 
-  if (!councInfo) return null;
+            if (verifyRes.data.status === "Success") {
+              toast.success("Appointment booked!");
+              setPaymentDone(true);
+            }
+          },
+          theme: { color: "#14b8a6" },
+        };
 
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-6 md:py-8 space-y-8">
-      {/* Counsellor Info */}
-      <div className="flex flex-col md:flex-row gap-6 bg-white shadow-lg rounded-xl p-5 md:p-6">
-        <img
-          className="w-full md:w-64 h-64 md:h-auto rounded-xl object-cover"
-          src={councInfo.image}
-          alt=""
-        />
+        new window.Razorpay(options).open();
+      } catch (err) {
+        toast.error("Payment failed");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        <div className="flex-1">
-          <p className="text-xl md:text-2xl font-semibold flex items-center gap-2">
-            {councInfo.name}
-            <img src={assets.verified_icon} className="w-5" />
-          </p>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">
-            {councInfo.degree} - {councInfo.speciality}
-          </p>
-          <p className="text-gray-500 mt-3 text-sm leading-relaxed">
-            {councInfo.about}
-          </p>
-          <p className="mt-4 font-medium text-base">
-            Fee: {currencySymbol}
-            {councInfo.fees}
-          </p>
+    if (!councInfo) return null;
 
-          {paymentDone && (
-            <div className="mt-4 bg-green-100 text-green-700 p-3 rounded-lg text-sm">
-              Payment successful! Appointment booked.
-            </div>
-          )}
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8 space-y-8">
+        {/* Counsellor Info */}
+        <div className="flex flex-col md:flex-row gap-6 bg-white shadow-lg rounded-xl p-5 md:p-6">
+          <img
+            className="w-full md:w-64 h-64 md:h-auto rounded-xl object-cover"
+            src={councInfo.image}
+            alt=""
+          />
+
+          <div className="flex-1">
+            <p className="text-xl md:text-2xl font-semibold flex items-center gap-2">
+              {councInfo.name}
+              <img src={assets.verified_icon} className="w-5" />
+            </p>
+            <p className="text-gray-600 mt-1 text-sm md:text-base">
+              {councInfo.degree} - {councInfo.speciality}
+            </p>
+            <p className="text-gray-500 mt-3 text-sm leading-relaxed">
+              {councInfo.about}
+            </p>
+            <p className="mt-4 font-medium text-base">
+              Fee: {currencySymbol}
+              {councInfo.fees}
+            </p>
+
+            {paymentDone && (
+              <div className="mt-4 bg-green-100 text-green-700 p-3 rounded-lg text-sm">
+                Payment successful! Appointment booked.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Booking Section */}
-      {!paymentDone && (
-        <div>
-          <p className="text-lg font-medium mb-3">Booking Slots</p>
+        {/* Booking Section */}
+        {!paymentDone && (
+          <div>
+            <p className="text-lg font-medium mb-3">Booking Slots</p>
 
-          {/* Days */}
-          <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
-            {councSlots.map((day, index) => {
-              if (!day || day.length === 0) return null;
+            {/* Days */}
+            <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
+              {councSlots.map((day, index) => {
+                if (!day || day.length === 0) return null;
 
-              return (
-                <div
-                  key={index}
-                  onClick={() => setSlotIndex(index)}
-                  className={`p-3 border rounded-lg cursor-pointer text-center min-w-17.5
+                return (
+                  <div
+                    key={index}
+                    onClick={() => setSlotIndex(index)}
+                    className={`p-3 border rounded-lg cursor-pointer text-center min-w-17.5
                   ${
                     slotIndex === index
                       ? "bg-blue-500 text-white"
                       : "border-gray-300"
                   }`}
-                >
-                  <p className="text-xs">
-                    {daysOfWeek[day[0].datetime.getDay()]}
+                  >
+                    <p className="text-xs">
+                      {daysOfWeek[day[0].datetime.getDay()]}
+                    </p>
+                    <p className="font-semibold">{day[0].datetime.getDate()}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Time Slots */}
+            <div className="flex flex-wrap gap-3">
+              {councSlots[slotIndex]?.length > 0 ? (
+                councSlots[slotIndex].map((item, index) => (
+                  <p
+                    key={index}
+                    onClick={() => !item.isBooked && setSlotTime(item.time)}
+                    className={`px-4 py-2 rounded-full border text-sm
+        ${
+          item.isBooked
+            ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
+            : item.time === slotTime
+              ? "bg-blue-500 text-white border-blue-500 cursor-pointer"
+              : "border-gray-300 cursor-pointer hover:border-blue-400"
+        }`}
+                  >
+                    {item.time}
                   </p>
-                  <p className="font-semibold">{day[0].datetime.getDate()}</p>
-                </div>
-              );
-            })}
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm">No slots available</p>
+              )}
+            </div>
+
+            <button
+              onClick={bookAppointment}
+              disabled={loading}
+              className="mt-6 w-full md:w-auto bg-blue-500 text-white px-8 py-3 rounded-full disabled:opacity-50"
+            >
+              {loading ? "Processing..." : "Pay & Book"}
+            </button>
           </div>
+        )}
 
-          {/* Time Slots */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {councSlots[slotIndex]?.length > 0 ? (
-              councSlots[slotIndex].map((item, index) => (
-                <p
-                  key={index}
-                  onClick={() => !item.isBooked && setSlotTime(item.time)}
-                  className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap shrink-0
-                  ${
-                    item.isBooked
-                      ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
-                      : item.time === slotTime
-                        ? "bg-blue-500 text-white border-blue-500 cursor-pointer"
-                        : "border-gray-300 cursor-pointer"
-                  }`}
-                >
-                  {item.time}
-                </p>
-              ))
-            ) : (
-              <p className="text-gray-400 text-sm">No slots available</p>
-            )}
-          </div>
-
-          <button
-            onClick={bookAppointment}
-            disabled={loading || role !== "client"}
-            className="mt-6 w-full md:w-auto bg-blue-500 text-white px-8 py-3 rounded-full disabled:opacity-50"
-          >
-            {loading ? "Processing..." : "Pay & Book"}
-          </button>
-        </div>
-      )}
-
-      <RelatedCouncellors
-        counId={councellorId}
-        speciality={councInfo.speciality}
-      />
-    </div>
-  );
+        <RelatedCouncellors
+          counId={councellorId}
+          speciality={councInfo.speciality}
+        />
+      </div>
+    );
 };;
 
 export default Appoinment;

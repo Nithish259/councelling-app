@@ -4,17 +4,55 @@ const { v2: cloudinary } = require("cloudinary");
 const streamifier = require("streamifier");
 const councellorModel = require("../models/councellorModel");
 const appointmentModel = require("../models/appoinmentModel");
+const validator = require("validator");
+
+const validatePassword = (password) => {
+  const errors = [];
+
+  if (password.length < 8) errors.push("at least 8 characters");
+  if (!/[A-Z]/.test(password)) errors.push("one uppercase letter");
+  if (!/[a-z]/.test(password)) errors.push("one lowercase letter");
+  if (!/[0-9]/.test(password)) errors.push("one number");
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push("one special character");
+
+  return errors;
+};
 
 /* ================= REGISTER COUNSELLOR ================= */
 exports.registerCouncellor = async (req, res) => {
   try {
     const { name, email, password, speciality, fees } = req.body;
 
-    const existing = await councellorModel.findOne({ email });
-    if (existing)
+    // ✅ Missing fields
+    if (!name || !email || !password || !speciality || !fees) {
       return res
         .status(400)
-        .json({ status: "Fail", message: "Counsellor exists" });
+        .json({ status: "Fail", message: "All fields are required" });
+    }
+
+    // ✅ Email validation
+    if (!validator.isEmail(email)) {
+      return res
+        .status(400)
+        .json({ status: "Fail", message: "Invalid email address" });
+    }
+
+    // ✅ Password validation with detailed message
+    const passwordErrors = validatePassword(password);
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({
+        status: "Fail",
+        message: `Password must contain ${passwordErrors.join(", ")}`,
+      });
+    }
+
+    // ✅ Existing user check
+    const existing = await councellorModel.findOne({ email });
+    if (existing) {
+      return res
+        .status(400)
+        .json({ status: "Fail", message: "Counsellor already exists" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -41,6 +79,7 @@ exports.registerCouncellor = async (req, res) => {
     res.status(500).json({ status: "Fail", message: error.message });
   }
 };
+
 
 /* ================= LOGIN COUNSELLOR ================= */
 exports.loginCouncellor = async (req, res) => {

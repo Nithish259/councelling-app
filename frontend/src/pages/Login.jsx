@@ -14,8 +14,8 @@ const Login = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passType, setPassType] = useState(false);
 
-  // counsellor-only
   const [speciality, setSpeciality] = useState("");
   const [fees, setFees] = useState("");
 
@@ -40,15 +40,11 @@ const Login = () => {
       }
 
       const payload =
-        role === "client"
-          ? { name, email, password }
-          : {
-              name,
-              email,
-              password,
-              speciality,
-              fees,
-            };
+        state === "Login"
+          ? { email, password }
+          : role === "client"
+            ? { name, email, password }
+            : { name, email, password, speciality, fees };
 
       const { data } = await axios.post(url, payload);
 
@@ -67,30 +63,34 @@ const Login = () => {
 
   useEffect(() => {
     if (token) navigate("/");
-  }, [token]);
+  }, [token, navigate]);
 
   return (
-    <form onSubmit={onSubmitHandler} className="min-h-[80vh] flex items-center">
-      <div className="flex flex-col gap-3 m-auto p-8 min-w-85 border rounded-xl text-sm shadow-lg">
-        <p className="text-2xl font-semibold">
+    <div className="min-h-[80vh] flex items-center justify-center px-2">
+      <form
+        onSubmit={onSubmitHandler}
+        className="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl flex flex-col gap-4"
+      >
+        <h2 className="text-2xl font-semibold text-center">
           {state === "Sign Up" ? "Create Account" : "Login"}
-        </p>
+        </h2>
 
-        {/* ROLE SELECT */}
+        {/* Role Selector */}
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          className="border p-2 rounded"
+          className="border p-2 rounded-lg"
         >
           <option value="client">Client</option>
           <option value="councellor">Counsellor</option>
         </select>
 
+        {/* Name (Sign Up only) */}
         {state === "Sign Up" && (
           <input
             type="text"
             placeholder="Full Name"
-            className="border p-2 rounded"
+            className="border p-2 rounded-lg"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -99,27 +99,36 @@ const Login = () => {
 
         <input
           type="email"
-          placeholder="Email"
-          className="border p-2 rounded"
+          placeholder="Email Address"
+          className="border p-2 rounded-lg"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="border p-2 rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        {/* Password Field */}
+        <div className="relative">
+          <input
+            type={passType ? "text" : "password"}
+            placeholder="Password"
+            className="border p-2 rounded-lg w-full pr-10"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <i
+            onClick={() => setPassType(!passType)}
+            className={`fa-solid ${
+              passType ? "fa-eye-slash" : "fa-eye"
+            } absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500`}
+          ></i>
+        </div>
 
-        {/* COUNSELLOR EXTRA FIELDS */}
+        {/* Counsellor Fields */}
         {role === "councellor" && state === "Sign Up" && (
           <>
             <select
-              className="w-full border rounded p-2 text-sm"
+              className="border p-2 rounded-lg"
               value={speciality}
               onChange={(e) => setSpeciality(e.target.value)}
               required
@@ -134,8 +143,8 @@ const Login = () => {
 
             <input
               type="number"
-              placeholder="Fees"
-              className="border p-2 rounded"
+              placeholder="Consultation Fees"
+              className="border p-2 rounded-lg"
               value={fees}
               onChange={(e) => setFees(e.target.value)}
               required
@@ -143,17 +152,17 @@ const Login = () => {
           </>
         )}
 
-        <button className="bg-blue-400 text-white py-2 rounded">
+        <button className="bg-blue-500 hover:bg-blue-600 transition text-white py-2 rounded-lg font-medium">
           {state === "Sign Up" ? "Create Account" : "Login"}
         </button>
 
-        <p className="text-center">
+        <p className="text-center text-sm">
           {state === "Sign Up" ? (
             <>
               Already have an account?{" "}
               <span
                 onClick={() => setState("Login")}
-                className="text-blue-600 cursor-pointer underline"
+                className="text-blue-600 cursor-pointer font-medium"
               >
                 Login
               </span>
@@ -163,15 +172,15 @@ const Login = () => {
               New here?{" "}
               <span
                 onClick={() => setState("Sign Up")}
-                className="text-blue-600 cursor-pointer underline"
+                className="text-blue-600 cursor-pointer font-medium"
               >
                 Create account
               </span>
             </>
           )}
         </p>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

@@ -7,7 +7,7 @@ const clientModel = require("../models/clientModel");
 const councellorModel = require("../models/councellorModel");
 const { sessionCompletedEmail } = require("./../emails/template");
 
-const autoCancelIfExpired = async (session) => {
+exports.autoCancelIfExpired = async (session) => {
   if (session.status === "completed" || session.status === "cancelled") return;
 
   const appointment = await appointmentModel.findById(session.appointmentId);
