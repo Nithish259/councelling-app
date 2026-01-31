@@ -43,11 +43,11 @@ app.get("/health", (req, res) => {
   res.status(200).send("Server is awake 🚀");
 });
 
-// Run every 5 minutes
-cron.schedule("*/5 * * * *", async () => {
-  console.log("Checking for expired sessions...");
-  await expireOldSessions();
-});
+// // Run every 5 minutes
+// cron.schedule("*/5 * * * *", async () => {
+//   console.log("Checking for expired sessions...");
+//   await expireOldSessions();
+// });
 
 // Create HTTP server
 const server = http.createServer(app);

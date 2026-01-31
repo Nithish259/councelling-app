@@ -24,7 +24,7 @@ export default function SessionHistory() {
         }
       })
       .finally(() => setLoading(false));
-  }, [sessions]);
+  }, []);
 
   if (loading) {
     return (
