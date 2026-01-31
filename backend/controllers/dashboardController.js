@@ -5,7 +5,8 @@ exports.getCouncellorDashboard = async (req, res) => {
   try {
     const councellorId = req.user.id;
 
-    // ================= BASIC COUNTS =================
+    /* ================= BASIC COUNTS ================= */
+
     const totalAppointments = await Appointment.countDocuments({
       councellorId,
     });
@@ -15,52 +16,78 @@ exports.getCouncellorDashboard = async (req, res) => {
       status: "completed",
     });
 
-    const todayDate = new Date().toISOString().split("T")[0];
+    const todayStr = new Date().toISOString().split("T")[0];
+
     const upcomingSessions = await Appointment.countDocuments({
       councellorId,
-      status: { $in: ["upcoming"] },
-      slotDate: { $gte: todayDate },
+      status: "upcoming",
+      slotDate: { $gte: todayStr },
     });
 
-    // ================= UNIQUE CLIENTS =================
+    /* ================= UNIQUE CLIENTS ================= */
+
     const uniqueClients = await Appointment.distinct("clientId", {
       councellorId,
     });
 
-    // ================= TODAY APPOINTMENTS =================
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    /* ================= TODAY APPOINTMENTS ================= */
 
     const todayAppointments = await Appointment.find({
       councellorId,
-      createdAt: { $gte: today, $lt: tomorrow },
-    }).populate("clientId", "name email");
-
-    // ================= RECENT APPOINTMENTS =================
-    const recentAppointments = await Appointment.find({
-      councellorId,
+      slotDate: todayStr,
     })
+      .sort({ slotTime: 1 })
+      .populate("clientId", "name email");
+
+    /* ================= RECENT APPOINTMENTS ================= */
+
+    const recentAppointments = await Appointment.find({ councellorId })
       .sort({ createdAt: -1 })
       .limit(5)
       .populate("clientId", "name");
 
-    // ================= SESSION NOTES =================
-    const recentNotes = await SessionNote.find({
-      councellorId,
-    })
+    /* ================= SESSION NOTES ================= */
+
+    const recentNotes = await SessionNote.find({ councellorId })
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate("notes");
+      .populate("clientId", "name"); // FIXED
 
-    // ================= EARNINGS =================
-    const payments = await Appointment.find({
+    /* ================= EARNINGS ================= */
+
+    const earningsData = await Appointment.find({
       councellorId,
-    }).populate("amount");
+      status: "completed",
+    }).select("amount");
 
-    const totalEarnings = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalEarnings = earningsData.reduce(
+      (sum, appt) => sum + (appt.amount || 0),
+      0,
+    );
+
+    /* ================= WEEKLY SESSIONS (FOR LINE CHART) ================= */
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weeklySessions = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+
+      const count = await Appointment.countDocuments({
+        councellorId,
+        slotDate: dateStr,
+        status: "completed",
+      });
+
+      weeklySessions.push({
+        day: days[d.getDay()],
+        sessions: count,
+      });
+    }
+
+    /* ================= RESPONSE ================= */
 
     res.status(200).json({
       success: true,
@@ -70,12 +97,14 @@ exports.getCouncellorDashboard = async (req, res) => {
         upcomingSessions,
         totalClients: uniqueClients.length,
         totalEarnings,
+        weeklySessions,
       },
       todayAppointments,
       recentAppointments,
       recentNotes,
     });
   } catch (error) {
+    console.error("Dashboard Error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to load dashboard data",

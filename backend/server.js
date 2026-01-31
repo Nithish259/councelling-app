@@ -4,7 +4,8 @@ const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
-
+const cron = require("node-cron");
+const { expireOldSessions } = require("./services/sessionExpiryService");
 dotenv.config({ path: "./.env" });
 
 const connectDB = require("./config/mongodb");
@@ -40,6 +41,12 @@ app.use("/api/chat", chatRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).send("Server is awake 🚀");
+});
+
+// Run every 5 minutes
+cron.schedule("*/5 * * * *", async () => {
+  console.log("Checking for expired sessions...");
+  await expireOldSessions();
 });
 
 // Create HTTP server
@@ -82,5 +89,5 @@ app.use(
 
 // Start server
 server.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });

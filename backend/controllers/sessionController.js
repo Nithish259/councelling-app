@@ -7,34 +7,6 @@ const clientModel = require("../models/clientModel");
 const councellorModel = require("../models/councellorModel");
 const { sessionCompletedEmail } = require("./../emails/template");
 
-exports.autoCancelIfExpired = async (session) => {
-  if (session.status === "completed" || session.status === "cancelled") return;
-
-  const appointment = await appointmentModel.findById(session.appointmentId);
-  if (!appointment) return;
-
-  // Combine date + time
-  const sessionDateTime = new Date(
-    `${appointment.slotDate} ${appointment.slotTime}`,
-  );
-
-  // Add 30 minutes buffer
-  const cancelTime = new Date(sessionDateTime.getTime() + 30 * 60 * 1000); // 30 minutes in ms
-
-  const now = new Date();
-
-  // Cancel only if current time is after sessionDateTime + 30 minutes
-  if (now > cancelTime) {
-    session.status = "cancelled";
-    session.endedAt = new Date();
-    await session.save();
-
-    await appointmentModel.findByIdAndUpdate(session.appointmentId, {
-      status: "cancelled",
-    });
-  }
-};
-
 /* ================= CREATE SESSION ================= */
 exports.createSession = async (req, res) => {
   try {
@@ -91,8 +63,6 @@ exports.getSessionByAppointment = async (req, res) => {
       });
     }
 
-    await autoCancelIfExpired(session);
-
     res.json({ status: "Success", session });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
@@ -111,8 +81,6 @@ exports.joinSession = async (req, res) => {
         message: "Session not found",
       });
     }
-
-    await autoCancelIfExpired(session); // 👈 ADD THIS
 
     if (session.status === "cancelled") {
       return res.status(400).json({
