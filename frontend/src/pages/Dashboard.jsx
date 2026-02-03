@@ -51,7 +51,7 @@ export default function CouncellorDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
       {/* HERO */}
       <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-8 shadow-sm">
         <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">
@@ -61,7 +61,7 @@ export default function CouncellorDashboard() {
           Here’s how your practice is doing today
         </p>
 
-        <div className="h-[1px] bg-gradient-to-r from-transparent via-gray-300 to-transparent my-5 sm:my-6" />
+        <div className="h-px bg-linear-to-r from-transparent via-gray-300 to-transparent my-5 sm:my-6" />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           <HeroStat

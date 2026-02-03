@@ -55,186 +55,211 @@ export default function JoinSession() {
   }, [token]);
 
   /* WEBRTC */
-  useEffect(() => {
-    if (!socketRef.current) return;
-    let localStream;
-    let peer;
+useEffect(() => {
+  if (!socketRef.current) return;
+  let localStream;
+  let peer;
 
-    const start = async () => {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      localVideoRef.current.srcObject = localStream;
-
-      peer = new RTCPeerConnection(ICE);
-      peerRef.current = peer;
-      localStream.getTracks().forEach((t) => peer.addTrack(t, localStream));
-
-      peer.ontrack = (e) => (remoteVideoRef.current.srcObject = e.streams[0]);
-
-      peer.onicecandidate = (e) => {
-        if (e.candidate)
-          socketRef.current.emit("ice-candidate", {
-            roomId,
-            candidate: e.candidate,
-          });
-      };
-
-      socketRef.current.emit("join-room", { roomId });
-
-      socketRef.current.on("ready", async ({ caller }) => {
-        if (socketRef.current.id === caller) {
-          const offer = await peer.createOffer();
-          await peer.setLocalDescription(offer);
-          socketRef.current.emit("offer", { roomId, offer });
-        }
-      });
-
-      socketRef.current.on("offer", async (offer) => {
-        await peer.setRemoteDescription(new RTCSessionDescription(offer));
-        while (iceQueue.current.length)
-          await peer.addIceCandidate(iceQueue.current.shift());
-        const answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        socketRef.current.emit("answer", { roomId, answer });
-      });
-
-      socketRef.current.on("answer", async (answer) => {
-        await peer.setRemoteDescription(new RTCSessionDescription(answer));
-        while (iceQueue.current.length)
-          await peer.addIceCandidate(iceQueue.current.shift());
-      });
-
-      socketRef.current.on("ice-candidate", async (candidate) => {
-        if (peer.remoteDescription)
-          await peer.addIceCandidate(new RTCIceCandidate(candidate));
-        else iceQueue.current.push(candidate);
-      });
-
-      socketRef.current.on("chat", ({ message, sender, timestamp }) =>
-        setMessages((prev) => [...prev, { message, sender, timestamp }]),
-      );
-
-      socketRef.current.on("peer-left", () => {
-        alert("The other participant as left.If you want you can wait");
-      });
-    };
-
-    start();
-
-    return () => {
-      localStream?.getTracks().forEach((t) => t.stop());
-      peer?.close();
-      socketRef.current?.emit("leave-room", { roomId });
-      socketRef.current?.removeAllListeners();
-    };
-  }, [roomId, token]);
-
-  /* NOTES LOAD + SAVE */
-  useEffect(() => {
-    if (role !== "councellor") return;
-    axios
-      .get(`${backendUrl}/api/session-notes/${roomId}`, { headers: { token } })
-      .then((res) => {
-        if (res.data?.note) {
-          setNotes(res.data.note.notes || "");
-          setAttachments(res.data.note.attachments || []);
-        }
-      });
-  }, [roomId, role]);
-
-  useEffect(() => {
-    if (role !== "councellor") return;
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      axios.post(
-        `${backendUrl}/api/session-notes/${roomId}`,
-        { notes },
-        { headers: { token } },
-      );
-    }, 800);
-    return () => clearTimeout(saveTimer.current);
-  }, [notes]);
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      setUploading(true);
-
-      const res = await axios.post(
-        `${backendUrl}/api/session-notes/${roomId}/attachment`,
-        formData,
-        { headers: { token } }, // ❌ removed Content-Type
-      );
-
-      setAttachments((p) => [...p, res.data.attachment]);
-    } catch (err) {
-      alert(err.response?.data?.message || "Upload failed");
-    } finally {
-      setUploading(false); // ✅ always runs
-    }
-  };
-
-  const toggleMic = () => {
-    const track = localVideoRef.current.srcObject.getAudioTracks()[0];
-    track.enabled = !track.enabled;
-    setMicOn(track.enabled);
-  };
-
-  const toggleCamera = () => {
-    const track = localVideoRef.current.srcObject.getVideoTracks()[0];
-    track.enabled = !track.enabled;
-    setCamOn(track.enabled);
-  };
-
-  const sendMessage = () => {
-    if (!text.trim()) return;
-    const msg = {
-      roomId,
-      message: text,
-      sender: socketRef.current.id,
-      timestamp: new Date(),
-    };
-    socketRef.current.emit("chat", msg);
-    setMessages((p) => [...p, msg]);
-    setText("");
-  };
-
-  const endSession = async () => {
-    try {
-      // 🔥 Call backend to mark session completed
-      await axios.post(
-        `${backendUrl}/api/session/end/${roomId}`,
-        {},
-        { headers: { token } },
-      );
-
-      console.log("Session ended successfully in backend");
-    } catch (error) {
-      console.error(
-        "Error ending session:",
-        error.response?.data || error.message,
-      );
-    }
-
-    // 🎥 Close WebRTC
+  const cleanupCall = () => {
+    localStream?.getTracks().forEach((t) => t.stop());
     peerRef.current?.close();
-
-    // 📡 Leave socket room
+    peerRef.current = null;
     socketRef.current?.emit("leave-room", { roomId });
-
-    // 🔌 Disconnect socket
     socketRef.current?.disconnect();
-
-    // 🚪 Redirect user
-    navigate("/");
+    navigate("/"); // ensures both users exit
   };
+
+  const start = async () => {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    localVideoRef.current.srcObject = localStream;
+
+    peer = new RTCPeerConnection(ICE);
+    peerRef.current = peer;
+    localStream.getTracks().forEach((t) => peer.addTrack(t, localStream));
+
+    peer.ontrack = (e) => (remoteVideoRef.current.srcObject = e.streams[0]);
+
+    peer.onicecandidate = (e) => {
+      if (e.candidate)
+        socketRef.current.emit("ice-candidate", {
+          roomId,
+          candidate: e.candidate,
+        });
+    };
+
+    socketRef.current.emit("join-room", { roomId });
+
+    socketRef.current.on("ready", async ({ caller }) => {
+      if (socketRef.current.id === caller) {
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        socketRef.current.emit("offer", { roomId, offer });
+      }
+    });
+
+    socketRef.current.on("offer", async (offer) => {
+      await peer.setRemoteDescription(new RTCSessionDescription(offer));
+      while (iceQueue.current.length)
+        await peer.addIceCandidate(iceQueue.current.shift());
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      socketRef.current.emit("answer", { roomId, answer });
+    });
+
+    socketRef.current.on("answer", async (answer) => {
+      await peer.setRemoteDescription(new RTCSessionDescription(answer));
+      while (iceQueue.current.length)
+        await peer.addIceCandidate(iceQueue.current.shift());
+    });
+
+    socketRef.current.on("ice-candidate", async (candidate) => {
+      if (peer.remoteDescription)
+        await peer.addIceCandidate(new RTCIceCandidate(candidate));
+      else iceQueue.current.push(candidate);
+    });
+
+    socketRef.current.on("chat", ({ message, sender, timestamp }) =>
+      setMessages((prev) => [...prev, { message, sender, timestamp }]),
+    );
+
+    // — when other user ends call
+    socketRef.current.on("call-ended", () => {
+      alert("The other participant ended the session");
+      cleanupCall();
+    });
+
+    // — when user disconnects unexpectedly
+    socketRef.current.on("peer-left", () => {
+      alert("The other participant left the call");
+      // cleanupCall();
+    });
+  };
+
+  start();
+
+  return () => {
+    localStream?.getTracks().forEach((t) => t.stop());
+    peer?.close();
+    socketRef.current?.emit("leave-room", { roomId });
+    socketRef.current?.removeAllListeners();
+  };
+}, [roomId, token]);
+
+/* NOTES LOAD + SAVE */
+useEffect(() => {
+  if (role !== "councellor") return;
+  axios
+    .get(`${backendUrl}/api/session-notes/${roomId}`, { headers: { token } })
+    .then((res) => {
+      if (res.data?.note) {
+        setNotes(res.data.note.notes || "");
+        setAttachments(res.data.note.attachments || []);
+      }
+    });
+}, [roomId, role]);
+
+useEffect(() => {
+  if (role !== "councellor") return;
+  clearTimeout(saveTimer.current);
+  saveTimer.current = setTimeout(() => {
+    axios.post(
+      `${backendUrl}/api/session-notes/${roomId}`,
+      { notes },
+      { headers: { token } },
+    );
+  }, 800);
+  return () => clearTimeout(saveTimer.current);
+}, [notes]);
+
+const handleFileUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    setUploading(true);
+
+    const res = await axios.post(
+      `${backendUrl}/api/session-notes/${roomId}/attachment`,
+      formData,
+      { headers: { token } }, // ❌ removed Content-Type
+    );
+
+    setAttachments((p) => [...p, res.data.attachment]);
+  } catch (err) {
+    alert(err.response?.data?.message || "Upload failed");
+  } finally {
+    setUploading(false); // always runs
+  }
+};
+
+const toggleMic = () => {
+  const track = localVideoRef.current.srcObject.getAudioTracks()[0];
+  track.enabled = !track.enabled;
+  setMicOn(track.enabled);
+};
+
+const toggleCamera = () => {
+  const track = localVideoRef.current.srcObject.getVideoTracks()[0];
+  track.enabled = !track.enabled;
+  setCamOn(track.enabled);
+};
+
+const sendMessage = () => {
+  if (!text.trim()) return;
+  const msg = {
+    roomId,
+    message: text,
+    sender: socketRef.current.id,
+    timestamp: new Date(),
+  };
+  socketRef.current.emit("chat", msg);
+  setMessages((p) => [...p, msg]);
+  setText("");
+};
+
+const endSession = async () => {
+  try {
+    await axios.post(
+      `${backendUrl}/api/session/end/${roomId}`,
+      {},
+      { headers: { token } },
+    );
+
+    console.log("Session ended successfully in backend");
+  } catch (error) {
+    console.error(
+      "Error ending session:",
+      error.response?.data || error.message,
+    );
+  }
+
+  //  Tell the other peer the call has ended
+  socketRef.current?.emit("call-ended", { roomId });
+
+  cleanupAndExit();
+};
+
+const cleanupAndExit = () => {
+  // 🎥 Close WebRTC
+  peerRef.current?.close();
+  peerRef.current = null;
+
+  // 📡 Leave socket room
+  socketRef.current?.emit("leave-room", { roomId });
+
+  // 🔌 Disconnect socket
+  socketRef.current?.disconnect();
+
+  // 🚪 Redirect
+  navigate("/");
+};
+
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });

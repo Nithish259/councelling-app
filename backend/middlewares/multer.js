@@ -14,19 +14,21 @@ const storage = multer.memoryStorage();
  * Keeps app secure
  */
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
+  const allowedMimeTypes = [
     "application/pdf",
+    "text/plain", // .txt files
   ];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  // Allow any image format (png, jpg, jpeg, webp, gif, svg, etc.)
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only images and PDF files are allowed"), false);
+    cb(new Error("Only image, PDF, and TXT files are allowed"), false);
   }
 };
+
 
 /**
  * UPLOAD INSTANCE

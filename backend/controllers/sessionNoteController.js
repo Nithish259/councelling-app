@@ -22,15 +22,17 @@ exports.uploadAttachment = async (req, res) => {
 
     const isPdf = req.file.mimetype === "application/pdf";
     const isImage = req.file.mimetype.startsWith("image/");
+    const isTxt = req.file.mimetype === "text/plain";
 
-    if (!isPdf && !isImage) {
+    if (!isPdf && !isImage && !isTxt) {
+      // ✅ UPDATED
       return res
         .status(400)
-        .json({ message: "Only images and PDFs are allowed" });
+        .json({ message: "Only images, PDFs, and TXT files are allowed" });
     }
 
     // Generate a unique filename but keep extension
-    const ext = path.extname(req.file.originalname); // e.g. ".pdf" or ".png"
+    const ext = path.extname(req.file.originalname);
     const baseName = path.basename(req.file.originalname, ext);
     const uniqueName = `${baseName}_${Date.now()}${ext}`;
 
@@ -39,10 +41,10 @@ exports.uploadAttachment = async (req, res) => {
 
     const result = await cloudinary.uploader.upload(base64File, {
       folder: "counselling/session-notes",
-      resource_type: isPdf ? "raw" : "image",
+      resource_type: isImage ? "image" : "raw", // ✅ UPDATED (txt + pdf = raw)
       use_filename: true,
-      unique_filename: false, // Important: prevents stripping extension
-      public_id: `counselling/session-notes/${uniqueName}`, // ensures uniqueness
+      unique_filename: false,
+      public_id: `counselling/session-notes/${uniqueName}`,
     });
 
     // Save to DB

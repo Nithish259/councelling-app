@@ -40,6 +40,25 @@ module.exports = (io) => {
       }
     });
 
+    /* ---------------- CALL ENDED (NEW) ---------------- */
+    socket.on("call-ended", ({ roomId }) => {
+      // Notify the other participant to end immediately
+      socket.to(roomId).emit("call-ended");
+
+      // Optional cleanup of room data
+      const room = rooms.get(roomId);
+      if (room) {
+        rooms.set(
+          roomId,
+          room.filter((id) => id !== socket.id),
+        );
+
+        if (rooms.get(roomId).length === 0) {
+          rooms.delete(roomId);
+        }
+      }
+    });
+
     /* ---------------- WEBRTC SIGNALS ---------------- */
     socket.on("offer", ({ roomId, offer }) => {
       socket.to(roomId).emit("offer", offer);
