@@ -82,7 +82,7 @@ require("./socket/chatSocket")(io);
 
 app.use(
   cors({
-    origin: ["https://councelling121.netlify.app"],
+    origin: ["https://councelling-121.netlify.app"],
     credentials: true,
   }),
 );
